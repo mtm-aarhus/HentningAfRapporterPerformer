@@ -71,6 +71,7 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     specific_content = json.loads(queue_element.data)
 
     # Assign variables from SpecificContent
+    Navn = specific_content.get("Navn", None)
     Sti = specific_content.get("Sti", None)
     QueueName = specific_content.get("QueueName", None)
     SharePointURL = specific_content.get("SharePointMappeLink", None)
@@ -349,12 +350,12 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     result.columns = kolonnenavne
 
     # Skriv til pænt Excel
-    excel_file_path = "PSA011, Mangler Timeregistrering.xlsx"
+    excel_file_path = f"{Navn}.xlsx"
     with pd.ExcelWriter(excel_file_path, engine='xlsxwriter', datetime_format='dd-mm-yyyy') as writer:
         result.to_excel(writer, sheet_name='YKMD_STD', index=False)
 
         workbook  = writer.book
-        worksheet = writer.sheets['Data']
+        worksheet = writer.sheets['YKMD_STD']
 
         # Lav Excel-tabel over hele området
         (max_row, max_col) = result.shape
@@ -418,9 +419,9 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     ctx.execute_query()
 
     # Upload file
-    file_name = os.path.basename("PSA011, Mangler Timeregistrering.xlsx")
+    file_name = os.path.basename(f"{Navn}.xlsx")
 
-    with open("PSA011, Mangler Timeregistrering.xlsx", "rb") as local_file:
+    with open(f"{Navn}.xlsx", "rb") as local_file:
         target_folder.upload_file(file_name, local_file.read()).execute_query()
         
     delete_files()
