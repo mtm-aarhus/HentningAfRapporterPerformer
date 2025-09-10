@@ -387,20 +387,19 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
         base_url = f"{base_url}/Sites/{sitename}"
     else:
         print("WARNING: Could not determine if this is a Teams or Sites URL. Using default base_url.")
+       
     credentials = UserCredential(RobotUsername,RobotPassword)
     ctx = ClientContext(base_url).with_credentials(credentials)
-   certification = orchestrator_connection.get_credential("SharePointCert")
-   api = orchestrator_connection.get_credential("SharePointAPI")
+    certification = orchestrator_connection.get_credential("SharePointCert")
+    api = orchestrator_connection.get_credential("SharePointAPI")
    
-   cert_credentials = {
+    cert_credentials = {
        "tenant": api.username,
        "client_id": api.password,
        "thumbprint": certification.username,
        "cert_path": certification.password
-   }
-   ctx = ClientContext(base_url).with_client_certificate(**cert_credentials)
-
-
+    }
+    ctx = ClientContext(base_url).with_client_certificate(**cert_credentials)
 
     # Extract path correctly
     query_params = parse_qs(parsed_url.query)
