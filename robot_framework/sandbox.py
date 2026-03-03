@@ -35,7 +35,6 @@ import pandas as pd
 orchestrator_connection = OrchestratorConnection("PythonOpusBookMark", os.getenv('OpenOrchestratorSQL'),os.getenv('OpenOrchestratorKey'), None)
 conversion_in_progress = set()
 
-
 def convert_xls_to_xlsx(path: str) -> None:
     import shutil
     absolute_path = os.path.abspath(path)
@@ -69,8 +68,8 @@ def convert_xls_to_xlsx(path: str) -> None:
     finally:
         conversion_in_progress.remove(absolute_path)
 
-queue_element = orchestrator_connection.get_next_queue_element('HentningAfRapporterQueue')
-specific_content = json.loads(queue_element.data)
+
+specific_content = json.loads(queue_element)
 
 # Assign variables from SpecificContent
 Navn = specific_content.get("Navn", None)
@@ -103,7 +102,7 @@ delete_files()
 # Start chrome
 chrome_options = Options()
 chrome_options.add_argument('--remote-debugging-pipe')
-chrome_options.add_argument("--headless=new")  # More stable headless mode
+# chrome_options.add_argument("--headless=new")  # More stable headless mode
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--safebrowsing-disable-download-protection")
 
@@ -131,28 +130,24 @@ driver.find_element(By.ID, "buttonLogon").click()
 
 print("Logged in to Opus portal successfully")
 
-#Videre til rapportside
 if QueueName == "option1":
+    first_of_this_month = datetime.now().replace(day=1)
+
     runs = [
         {
             "name": "run1",
-            "start": (datetime.now().replace(day=1) - relativedelta(months=3)).strftime("%d.%m.%Y"),
-            "end": (datetime.now().replace(day=1) - relativedelta(months=2) - timedelta(days=1)).strftime("%d.%m.%Y"),
-            "Filename": "run1file"
-
+            # næst-seneste afsluttede måned (m-2)
+            "start": (first_of_this_month - relativedelta(months=2)).strftime("%d.%m.%Y"),
+            "end":   (first_of_this_month - relativedelta(months=1) - timedelta(days=1)).strftime("%d.%m.%Y"),
+            "Filename": "run1file",
         },
         {
             "name": "run2",
-            "start": (datetime(datetime.now().year, datetime.now().month, 1) - relativedelta(months=2)).strftime("%d.%m.%Y"),
-            "end": (datetime(datetime.now().year, datetime.now().month, 1) - relativedelta(months=1) - timedelta(days=1)).strftime("%d.%m.%Y"),
-            "Filename": "run2file"
+            # seneste afsluttede måned (m-1)
+            "start": (first_of_this_month - relativedelta(months=1)).strftime("%d.%m.%Y"),
+            "end":   (first_of_this_month - timedelta(days=1)).strftime("%d.%m.%Y"),
+            "Filename": "run2file",
         },
-        {
-            "name": "run3",
-            "start": (datetime(datetime.now().year, datetime.now().month, 1) - relativedelta(months=1)).strftime("%d.%m.%Y"),
-            "end": (datetime(datetime.now().year, datetime.now().month, 1) - timedelta(days=1)).strftime("%d.%m.%Y"),
-            "Filename": "run3file"
-        }
     ]
 elif QueueName == "option2":
     runs = [
@@ -352,12 +347,12 @@ kolonnenavne = [
 result.columns = kolonnenavne
 
 # Skriv til pænt Excel
-excel_file_path = "PSA011, Mangler Timeregistrering.xlsx"
+excel_file_path = f"{Navn}.xlsx"
 with pd.ExcelWriter(excel_file_path, engine='xlsxwriter', datetime_format='dd-mm-yyyy') as writer:
     result.to_excel(writer, sheet_name='YKMD_STD', index=False)
 
     workbook  = writer.book
-    worksheet = writer.sheets['Data']
+    worksheet = writer.sheets['YKMD_STD']
 
     # Lav Excel-tabel over hele området
     (max_row, max_col) = result.shape
@@ -389,10 +384,19 @@ elif "/Sites/" in SharePointURL:
     base_url = f"{base_url}/Sites/{sitename}"
 else:
     print("WARNING: Could not determine if this is a Teams or Sites URL. Using default base_url.")
+    
 credentials = UserCredential(RobotUsername,RobotPassword)
 ctx = ClientContext(base_url).with_credentials(credentials)
+certification = orchestrator_connection.get_credential("SharePointCert")
+api = orchestrator_connection.get_credential("SharePointAPI")
 
-
+cert_credentials = {
+    "tenant": api.username,
+    "client_id": api.password,
+    "thumbprint": certification.username,
+    "cert_path": certification.password
+}
+ctx = ClientContext(base_url).with_client_certificate(**cert_credentials)
 
 # Extract path correctly
 query_params = parse_qs(parsed_url.query)
@@ -421,9 +425,9 @@ ctx.load(target_folder)
 ctx.execute_query()
 
 # Upload file
-file_name = os.path.basename("PSA011, Mangler Timeregistrering.xlsx")
+file_name = os.path.basename(f"{Navn}_test_Laura.xlsx")
 
-with open("PSA011, Mangler Timeregistrering.xlsx", "rb") as local_file:
+with open(f"{Navn}.xlsx", "rb") as local_file:
     target_folder.upload_file(file_name, local_file.read()).execute_query()
     
 delete_files()

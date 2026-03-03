@@ -90,7 +90,7 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     print('Started process "Hentning af rapporter"')
 
     #slet filen, hvis den ikke er slettet fra sidst
-    IllegalFileName = ["YKMD_STD.xls", "run1file.xls", "run2file.xls", "run3file.xls", "run4file.xls", "YKMD_STD.xlsx", "run1file.xlsx", "run2file.xlsx", "run3file.xlsx", "run4file.xlsx", "samlet.xlsx", "samlet_pænt.xlsx", "PSA011, Mangler Timeregistrering.xlsx "]
+    IllegalFileName = ["YKMD_STD.xls", "run1file.xls", "run2file.xls", "run3file.xls", "run4file.xls", "YKMD_STD.xlsx", "run1file.xlsx", "run2file.xlsx", "run3file.xlsx", "run4file.xlsx", "samlet.xlsx", "samlet_pænt.xlsx", "PSA011, Mangler Timeregistrering.xlsx ", "PSA011, Manglende Timeregistrering.xlsx "]
     downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
     def delete_files():
         for filename in IllegalFileName:
@@ -129,28 +129,24 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
 
     print("Logged in to Opus portal successfully")
 
-    #Videre til rapportside
     if QueueName == "option1":
+        first_of_this_month = datetime.now().replace(day=1)
+
         runs = [
             {
                 "name": "run1",
-                "start": (datetime.now().replace(day=1) - relativedelta(months=3)).strftime("%d.%m.%Y"),
-                "end": (datetime.now().replace(day=1) - relativedelta(months=2) - timedelta(days=1)).strftime("%d.%m.%Y"),
-                "Filename": "run1file"
-
+                # næst-seneste afsluttede måned (m-2)
+                "start": (first_of_this_month - relativedelta(months=2)).strftime("%d.%m.%Y"),
+                "end":   (first_of_this_month - relativedelta(months=1) - timedelta(days=1)).strftime("%d.%m.%Y"),
+                "Filename": "run1file",
             },
             {
                 "name": "run2",
-                "start": (datetime(datetime.now().year, datetime.now().month, 1) - relativedelta(months=2)).strftime("%d.%m.%Y"),
-                "end": (datetime(datetime.now().year, datetime.now().month, 1) - relativedelta(months=1) - timedelta(days=1)).strftime("%d.%m.%Y"),
-                "Filename": "run2file"
+                # seneste afsluttede måned (m-1)
+                "start": (first_of_this_month - relativedelta(months=1)).strftime("%d.%m.%Y"),
+                "end":   (first_of_this_month - timedelta(days=1)).strftime("%d.%m.%Y"),
+                "Filename": "run2file",
             },
-            {
-                "name": "run3",
-                "start": (datetime(datetime.now().year, datetime.now().month, 1) - relativedelta(months=1)).strftime("%d.%m.%Y"),
-                "end": (datetime(datetime.now().year, datetime.now().month, 1) - timedelta(days=1)).strftime("%d.%m.%Y"),
-                "Filename": "run3file"
-            }
         ]
     elif QueueName == "option2":
         runs = [
