@@ -424,7 +424,7 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     ctx.execute_query()
 
     # Upload file
-    file_name = os.path.basename(f"{Navn}_test_Laura.xlsx")
+    file_name = os.path.basename(f"{Navn}.xlsx")
 
     with open(f"{Navn}.xlsx", "rb") as local_file:
         target_folder.upload_file(file_name, local_file.read()).execute_query()
