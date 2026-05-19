@@ -50,18 +50,6 @@ def main():
                             break
                         except Exception as e:
                                 #Deleting potential leftover files from downloads folder
-                            orchestrator_connection.log_info('Deleting local files')
-
-                            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
-                            specific_content = json.loads(queue_element.data)
-                            UdviklerMail = orchestrator_connection.get_constant("balas").value
-                            MailModtager = specific_content.get("Ansvarlig i Økonomi", None)
-                            MailModtager = UdviklerMail
-                            FileName = specific_content.get("Filnavn", None)
-                            if os.path.exists(downloads_folder + '\\' + FileName + ".xls"):
-                                os.remove(downloads_folder + '\\' + FileName + ".xls")
-                            if os.path.exists(downloads_folder + '\\' + "YKMD_STD.xls"):
-                                os.remove(downloads_folder + '\\' + "YKMD_STD.xls")
                             orchestrator_connection.log_trace(f"Attempt {attempt} failed for current queue element: {e}")
                             if attempt < config.QUEUE_ATTEMPTS:
                                 orchestrator_connection.log_trace("Retrying queue element.")
@@ -69,7 +57,6 @@ def main():
                             else:
                                 orchestrator_connection.log_trace(f"Queue element failed after {attempt} attempts.")
                                 
-                                send_error_email(MailModtager, FileName, UdviklerMail)
                                 raise
                     orchestrator_connection.set_queue_element_status(queue_element.id, QueueStatus.DONE)
 
