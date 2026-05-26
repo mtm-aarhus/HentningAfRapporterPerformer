@@ -78,8 +78,8 @@ def convert_xls_to_xlsx(path: str, sheet_name: str = "Sheet1") -> str:
 
 def wait_for_download(downloads_folder: str, initial_file_count: int, filename: str, timeout: int = 3600) -> str:
     """
-    Venter på at en ny .xls-fil dukker op i downloads-mappen,
-    omdøber den til `filename`.xls og returnerer den nye sti.
+    Venter på at en ny .xls eller .xlsx fil dukker op i downloads-mappen,
+    omdøber den til `filename` og returnerer den nye sti.
     """
     start_time = time.time()
     while True:
@@ -89,8 +89,9 @@ def wait_for_download(downloads_folder: str, initial_file_count: int, filename: 
                 [os.path.join(downloads_folder, f) for f in files],
                 key=os.path.getctime,
             )
-            if latest_file.endswith(".xls"):
-                new_path = os.path.join(downloads_folder, f"{filename}.xls")
+            if latest_file.endswith(".xls") or latest_file.endswith(".xlsx"):
+                ext = os.path.splitext(latest_file)[1]
+                new_path = os.path.join(downloads_folder, f"{filename}{ext}")
                 os.rename(latest_file, new_path)
                 print(f"Fil downloadet og omdøbt til {new_path}")
                 return new_path

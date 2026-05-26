@@ -11,7 +11,7 @@ from robot_framework.processes import mtmflexrapport
 PROCESS_MAP = {
     "PSA011, Mangler Timeregistrering": manglertidsregistrering.run,
     "PSA011, Mangler Timeregistrering, MTM": manglertidsregistreringmtm.run,
-    # "MTMFlexRapport": mtmflexrapport.run
+    "MTMFlexRapport": mtmflexrapport.run
 }
 
 
@@ -20,7 +20,7 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     queue_name = data.get("QueueName")
 
     if queue_name not in PROCESS_MAP:
-        raise ValueError(f"Ukendt QueueName: '{queue_name}'. Kendte værdier: {list(PROCESS_MAP.keys())}")
+        orchestrator_connection.log_error('Kønavnet har ikke en tilsvarende process')
 
     downloads_folder = get_downloads_folder()
     delete_temp_files(downloads_folder)
