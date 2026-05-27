@@ -11,7 +11,7 @@ from robot_framework.processes import mtmflexrapport
 PROCESS_MAP = {
     "PSA011, Mangler Timeregistrering": manglertidsregistrering.run,
     "PSA011, Mangler Timeregistrering, MTM": manglertidsregistreringmtm.run,
-    "MTMFlexRapport": mtmflexrapport.run
+    "MTMFlexrapport": mtmflexrapport.run
 }
 
 
@@ -21,6 +21,7 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
 
     if queue_name not in PROCESS_MAP:
         orchestrator_connection.log_error('Kønavnet har ikke en tilsvarende process')
+        return
 
     downloads_folder = get_downloads_folder()
     delete_temp_files(downloads_folder)
